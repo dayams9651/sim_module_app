@@ -24,6 +24,30 @@ class UploadController extends GetxController {
     }
   }
 
+  // Future<String?> pickImageFromCamera() async {
+  //   final ImagePicker picker = ImagePicker();
+  //   final XFile? image = await picker.pickImage(source: ImageSource.camera);
+  //
+  //   if (image != null) {
+  //     final compressedData = await FlutterImageCompress.compressWithFile(
+  //       image.path,
+  //       quality: 80,
+  //     );
+  //     if (compressedData != null) {
+  //       final compressedFile = File(image.path)..writeAsBytesSync(compressedData);
+  //       final fileSizeInBytes = compressedFile.lengthSync();
+  //       debugPrint("Captured image size: ${fileSizeInBytes / 1024} KB");
+  //       if (fileSizeInBytes <= 819200) {
+  //         selectedImages.add(compressedFile,);
+  //         return compressedFile.path;
+  //       } else {
+  //         debugPrint("Image is too large. Max allowed size is 800KB.");
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // }
+
   void removeImage(File file) {
     selectedImages.remove(file);
   }
