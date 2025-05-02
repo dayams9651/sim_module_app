@@ -9,9 +9,19 @@ class TextController extends GetxController {
     final inputImage = InputImage.fromFile(image);
     final textRecognizer = TextRecognizer();
     final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
-    List<String> lines = recognizedText.text.split('\n');
-    String processedText = lines.length > 1 ? lines.sublist(1).join('\n') : '';
-    detectedText.value = processedText.length > 21 ? processedText.substring(0, 21) : processedText;
+
+    String allText = recognizedText.text.replaceAll('\n', '');
+
+    final RegExp pattern = RegExp(r'899.*?U');
+
+    final match = pattern.firstMatch(allText);
+
+    if (match != null) {
+      String matchedText = match.group(0)!;
+      detectedText.value = matchedText.length > 21 ? matchedText.substring(0, 21) : matchedText;
+    } else {
+      detectedText.value = '';
+    }
     await textRecognizer.close();
   }
 }
