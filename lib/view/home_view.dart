@@ -22,13 +22,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   QRViewController? _qrViewController;
   final TextEditingController _textController = TextEditingController();
   final MobileScannerController controllerScanner = MobileScannerController();
+  final TextEditingController _simController = TextEditingController();
   final TextController controller = Get.put(TextController());
   final UploadController imageController = Get.put(UploadController());
+
+  @override
+  void initState() {
+    super.initState();
+    controller.detectedText.listen((value) {
+      _simController.text = value;
+    });
+  }
 
   @override
   void dispose() {
     _qrViewController?.dispose();
     _textController.dispose();
+    _simController.dispose();
     super.dispose();
   }
 
@@ -47,7 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
+              child: const Text('No'),
           ),
           TextButton(
             onPressed: () {
@@ -57,7 +67,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-    ) ?? false;
+    ) ??
+        false;
   }
 
   @override
@@ -72,8 +83,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             padding: const EdgeInsets.all(8.0),
             child: Text(
               "Scan SIM Number",
-              style: AppTextStyles.kCaption13SemiBoldTextStyle.copyWith(
-                  color: AppColors.white),
+              style: AppTextStyles.kCaption13SemiBoldTextStyle
+                  .copyWith(color: AppColors.white),
             ),
           ),
           actions: [
@@ -97,14 +108,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: QRView(
                           key: GlobalKey(debugLabel: 'QR'),
-                          onQRViewCreated: (QRViewController controller) {
+                          onQRViewCreated:
+                              (QRViewController controller) {
                             _qrViewController = controller;
                             _qrViewController?.resumeCamera();
-                            _qrViewController?.scannedDataStream.listen((scanData) async {
-                                if (scanData != null && scanData.code != null) {
+                            _qrViewController?.scannedDataStream
+                                .listen((scanData) async {
+                              if (scanData != null &&
+                                  scanData.code != null) {
                                 String scannedCode = scanData.code ?? '';
                                 if (scannedCode.length > 25) {
-                                  scannedCode = scannedCode.substring(0, 35);
+                                  scannedCode =
+                                      scannedCode.substring(0, 35);
                                 }
                                 setState(() {
                                   _textController.text = scannedCode;
@@ -116,62 +131,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       SizedBox(height: 10),
                       RoundButton(
-                        title: 'Scan SIM Number',
+                        title: 'Scan Airtel SIM',
                         onTap: () async {
                           try {
                             final picker = ImagePicker();
-                            final pickedFile = await picker.pickImage(source: ImageSource.camera);
+                            final pickedFile = await picker.pickImage(
+                                source: ImageSource.camera);
                             if (pickedFile != null) {
-                              await controller.detectTextFromImage(File(pickedFile.path));
+                              await controller.detectTextFromImage(
+                                  File(pickedFile.path));
                             }
                           } catch (e) {
-                            Get.snackbar('Error', 'Failed to scan image: ${e.toString()}');
+                            Get.snackbar('Error',
+                                'Failed to scan image: ${e.toString()}');
                           }
                         },
                       ),
-                      controller.detectedText.isNotEmpty
-                          ? _infoBox(controller.detectedText.value)
-                          : _infoBox("SIM number here"),
+                      RoundButton(
+                        title: 'Scan Other SIM',
+                        onTap: () async {
+                          try {
+                            final picker = ImagePicker();
+                            final pickedFile = await picker.pickImage(
+                                source: ImageSource.camera);
+                            if (pickedFile != null) {
+                              await controller.detectTextFromImageOther(
+                                  File(pickedFile.path));
+                            }
+                          } catch (e) {
+                            Get.snackbar('Error',
+                                'Failed to scan image: ${e.toString()}');
+                          }
+                        },
+                      ),
+                      _infoBox(_simController),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
                           controller: _textController,
                           decoration: InputDecoration(
                             hintText: "Enter your serial number",
-                            hintStyle: TextStyle(fontWeight: FontWeight.bold),
+                            hintStyle:
+                            TextStyle(fontWeight: FontWeight.bold),
                             border: OutlineInputBorder(),
                           ),
                         ),
                       ),
                       RoundButton(
                           title: "Take photo of SIM",
-                          onTap: imageController.pickImageFromCamera
-                      ),
+                          onTap: imageController.pickImageFromCamera),
                       imageController.selectedImages.isNotEmpty
                           ? SizedBox(
                         height: 200,
                         child: GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                          SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 3,
                             mainAxisSpacing: 10,
                             crossAxisSpacing: 10,
                           ),
-                          itemCount: imageController.selectedImages.length,
+                          itemCount: imageController
+                              .selectedImages.length,
                           itemBuilder: (context, index) {
-                            final File image = imageController.selectedImages[index];
+                            final File image = imageController
+                                .selectedImages[index];
                             return Stack(
                               children: [
                                 Container(
                                   decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius:
+                                    BorderRadius.circular(10),
                                   ),
-                                  child: Image.file(image, fit: BoxFit.cover),
+                                  child: Image.file(image,
+                                      fit: BoxFit.cover),
                                 ),
                                 Positioned(
                                   left: 3,
                                   bottom: 5,
                                   child: GestureDetector(
-                                    onTap: () => imageController.removeImage(image),
+                                    onTap: () => imageController
+                                        .removeImage(image),
                                     child: CircleAvatar(
                                       backgroundColor: Colors.red,
                                       radius: 15,
@@ -192,7 +231,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       RoundButton(
                         title: 'Submit',
                         onTap: () {
-                          final sim = controller.detectedText.value.trim();
+                          final sim = _simController.text.trim();
                           final serial = _textController.text.trim();
                           if (sim.isEmpty || serial.isEmpty) {
                             Get.snackbar(
@@ -202,7 +241,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               colorText: Colors.white,
                             );
                           } else {
-                            imageController.uploadSimData(simNo: sim, serial: serial);
+                            imageController.uploadSimData(
+                                simNo: sim, serial: serial);
                           }
                         },
                       ),
@@ -225,7 +265,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _infoBox(String text) {
+
+  Widget _infoBox(TextEditingController controller) {
     return Container(
       width: 380,
       padding: EdgeInsets.all(10),
@@ -235,8 +276,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         border: Border.all(color: Colors.black, width: 1),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Text(
-        text,
+      child: TextField(
+        controller: controller,
+        maxLines: null,
+        decoration: InputDecoration.collapsed(
+          hintText: "Enter SIM number",
+        ),
         style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
       ),
     );

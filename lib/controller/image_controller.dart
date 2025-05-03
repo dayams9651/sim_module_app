@@ -141,7 +141,7 @@ class UploadController extends GetxController {
       }
 
       if (selectedImages.isEmpty) {
-        Get.snackbar("Error", "Please select an image first");
+        Get.snackbar("Error", "Please select an image first", backgroundColor: AppColors.error20);
         return;
       }
 

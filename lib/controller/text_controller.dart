@@ -13,6 +13,7 @@ class TextController extends GetxController {
     String allText = recognizedText.text.replaceAll('\n', '');
 
     final RegExp pattern = RegExp(r'899.*?U');
+    // final RegExp pattern = RegExp(r'^899.+\d{12}');
 
     final match = pattern.firstMatch(allText);
 
@@ -22,6 +23,29 @@ class TextController extends GetxController {
     } else {
       detectedText.value = '';
     }
+
+    await textRecognizer.close();
+  }
+
+  Future<void> detectTextFromImageOther(File image) async {
+    final inputImage = InputImage.fromFile(image);
+    final textRecognizer = TextRecognizer();
+    final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+
+    String allText = recognizedText.text.replaceAll('\n', '');
+
+    // final RegExp pattern = RegExp(r'899.*?U');
+    final RegExp pattern = RegExp(r'^899.+\d{12}');
+
+    final match = pattern.firstMatch(allText);
+
+    if (match != null) {
+      String matchedText = match.group(0)!;
+      detectedText.value = matchedText.length > 21 ? matchedText.substring(0, 21) : matchedText;
+    } else {
+      detectedText.value = '';
+    }
+
     await textRecognizer.close();
   }
 }
