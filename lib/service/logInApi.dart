@@ -7,7 +7,6 @@ import '../common/widget/snackbar_helper.dart';
 import '../const/api_url.dart';
 import '../style/color.dart';
 import 'package:get_storage/get_storage.dart';
-
 import 'loginIn_response_model.dart';
 final box = GetStorage();
 class UserLogInService extends GetxController {
@@ -19,7 +18,6 @@ class UserLogInService extends GetxController {
       final response = await http.post(
         Uri.parse(logInApi),
         headers: {
-
           'Content-Type': 'application/json',
         },
         body: json.encode({
@@ -46,11 +44,10 @@ class UserLogInService extends GetxController {
           showCustomSnackbar('Error', responseData['message'] ?? 'Your Email or Password is wrong', backgroundColor: AppColors.error20);
         }
       } else {
-        showCustomSnackbar('Alert', 'Your Email or Password is wrong');
+        showCustomSnackbar('Alert ', responseData['message'], backgroundColor: AppColors.warning20);
       }
     } catch (error) {
-
-      showCustomSnackbar('Error', 'Please Check Your Internet Connection', backgroundColor: AppColors.error10);
+      showCustomSnackbar('Error', 'Please Check Your Internet Connection', backgroundColor: AppColors.error20);
     }
   }
   String getToken() {

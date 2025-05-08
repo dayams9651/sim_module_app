@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mobile_code/const/image_strings.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_code_scanner_plus/qr_code_scanner_plus.dart';
 import '../common/widget/round_button.dart';
@@ -11,6 +10,7 @@ import '../controller/image_controller.dart';
 import '../controller/text_controller.dart';
 import '../style/color.dart';
 import '../style/text_style.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -20,26 +20,22 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   QRViewController? _qrViewController;
-  final TextEditingController _textController = TextEditingController();
+  final TextEditingController serialController = TextEditingController();
   final MobileScannerController controllerScanner = MobileScannerController();
-  final TextEditingController _simController = TextEditingController();
+  final TextEditingController simController = TextEditingController();
   final TextController controller = Get.put(TextController());
   final UploadController imageController = Get.put(UploadController());
+  bool isAirtelSelected = false;
+  bool isJioSelected = false;
+  bool isViSelected = false;
+  File? capturedImage;
 
   @override
   void initState() {
     super.initState();
     controller.detectedText.listen((value) {
-      _simController.text = value;
+      simController.text = value;
     });
-  }
-
-  @override
-  void dispose() {
-    _qrViewController?.dispose();
-    _textController.dispose();
-    _simController.dispose();
-    super.dispose();
   }
 
   void _toggleFlash() async {
@@ -57,7 +53,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
+            child: const Text('No'),
           ),
           TextButton(
             onPressed: () {
@@ -71,6 +67,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
         false;
   }
 
+  void _onSimTypeSelected(String simType) {
+    setState(() {
+      isAirtelSelected = simType == 'Airtel';
+      isJioSelected = simType == 'Jio';
+      isViSelected = simType == 'Vodafone';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -78,7 +82,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: AppColors.primaryColor,
           title: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(
@@ -108,8 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                         child: QRView(
                           key: GlobalKey(debugLabel: 'QR'),
-                          onQRViewCreated:
-                              (QRViewController controller) {
+                          onQRViewCreated: (QRViewController controller) {
                             _qrViewController = controller;
                             _qrViewController?.resumeCamera();
                             _qrViewController?.scannedDataStream
@@ -122,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                       scannedCode.substring(0, 35);
                                 }
                                 setState(() {
-                                  _textController.text = scannedCode;
+                                  serialController.text = scannedCode;
                                 });
                               }
                             });
@@ -135,18 +137,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onTap: () async {
                           try {
                             final picker = ImagePicker();
-                            final pickedFile = await picker.pickImage(
-                                source: ImageSource.camera);
+                            final pickedFile = await picker.pickImage(source: ImageSource.camera);
                             if (pickedFile != null) {
-                              await controller.detectTextFromImage(
-                                  File(pickedFile.path));
+                              setState(() {
+                                capturedImage = File(pickedFile.path);
+                              });
+                              await controller.detectTextFromImage(File(pickedFile.path));
                             }
                           } catch (e) {
-                            Get.snackbar('Error',
-                                'Failed to scan image: ${e.toString()}');
+                            Get.snackbar('Error', 'Failed to scan image: ${e.toString()}');
                           }
                         },
                       ),
+
                       RoundButton(
                         title: 'Scan Other SIM',
                         onTap: () async {
@@ -155,6 +158,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             final pickedFile = await picker.pickImage(
                                 source: ImageSource.camera);
                             if (pickedFile != null) {
+                              setState(() {
+                                capturedImage = File(pickedFile.path);
+                              });
                               await controller.detectTextFromImageOther(
                                   File(pickedFile.path));
                             }
@@ -164,11 +170,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           }
                         },
                       ),
-                      _infoBox(_simController),
+                      _infoBox(simController),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: TextField(
-                          controller: _textController,
+                          controller: serialController,
                           decoration: InputDecoration(
                             hintText: "Enter your serial number",
                             hintStyle:
@@ -177,72 +183,111 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ),
-                      RoundButton(
-                          title: "Take photo of SIM",
-                          onTap: imageController.pickImageFromCamera),
-                      imageController.selectedImages.isNotEmpty
-                          ? SizedBox(
-                        height: 200,
-                        child: GridView.builder(
-                          gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
-                            mainAxisSpacing: 10,
-                            crossAxisSpacing: 10,
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: isAirtelSelected,
+                                onChanged: (value) {
+                                  _onSimTypeSelected('Airtel');
+                                },
+                              ),
+                              const Text("Airtel"),
+                            ],
                           ),
-                          itemCount: imageController
-                              .selectedImages.length,
-                          itemBuilder: (context, index) {
-                            final File image = imageController
-                                .selectedImages[index];
-                            return Stack(
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius:
-                                    BorderRadius.circular(10),
-                                  ),
-                                  child: Image.file(image,
-                                      fit: BoxFit.cover),
-                                ),
-                                Positioned(
-                                  left: 3,
-                                  bottom: 5,
-                                  child: GestureDetector(
-                                    onTap: () => imageController
-                                        .removeImage(image),
-                                    child: CircleAvatar(
-                                      backgroundColor: Colors.red,
-                                      radius: 15,
-                                      child: Icon(
-                                        Icons.cancel,
-                                        size: 27,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
+                          const SizedBox(width: 20),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: isJioSelected,
+                                onChanged: (value) {
+                                  _onSimTypeSelected('Jio');
+                                },
+                              ),
+                              const Text("Jio"),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: isViSelected,
+                                onChanged: (value) {
+                                  _onSimTypeSelected('Vodafone');
+                                },
+                              ),
+                              const Text("Vodafone"),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      capturedImage != null
+                          ? Image.file(
+                        capturedImage!,
+                        height: 150,
+                        width: 230,
+                        fit: BoxFit.cover,
                       )
-                          : Center(child: Image.asset(noData1)),
+                          : Center(child: Text('No image selected')),
+
+                      // RoundButton(
+                      //   title: 'Submit',
+                      //   onTap: () {
+                      //     final sim = simController.text.trim();
+                      //     final serial = serialController.text.trim();
+                      //     if (sim.isEmpty || serial.isEmpty) {
+                      //       Get.snackbar(
+                      //         "Error",
+                      //         "SIM or Serial number is missing",
+                      //         backgroundColor: Colors.red,
+                      //         colorText: Colors.white,
+                      //       );
+                      //     } else {
+                      //       imageController.uploadSimData(
+                      //         simNo: sim,
+                      //         serial: serial,
+                      //         imageFile: capturedImage,
+                      //         simController: simController,
+                      //         serialController: serialController,
+                      //         simType: '',
+                      //       );
+                      //     }
+                      //   },
+                      // ),
                       RoundButton(
                         title: 'Submit',
                         onTap: () {
-                          final sim = _simController.text.trim();
-                          final serial = _textController.text.trim();
-                          if (sim.isEmpty || serial.isEmpty) {
+                          final sim = simController.text.trim();
+                          final serial = serialController.text.trim();
+                          String selectedSimType = '';
+
+                          if (isAirtelSelected) {
+                            selectedSimType = 'Airtel';
+                          } else if (isJioSelected) {
+                            selectedSimType = 'Jio';
+                          } else if (isViSelected) {
+                            selectedSimType = 'Vodafone';
+                          }
+
+                          if (sim.isEmpty || serial.isEmpty || selectedSimType.isEmpty) {
                             Get.snackbar(
                               "Error",
-                              "SIM or Serial number is missing",
+                              "SIM, Serial number, or SIM type is missing",
                               backgroundColor: Colors.red,
                               colorText: Colors.white,
                             );
                           } else {
                             imageController.uploadSimData(
-                                simNo: sim, serial: serial);
+                              simNo: sim,
+                              serial: serial,
+                              imageFile: capturedImage,
+                              simController: simController,
+                              serialController: serialController,
+                              simType: selectedSimType,
+                            );
                           }
                         },
                       ),
@@ -264,7 +309,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
 
   Widget _infoBox(TextEditingController controller) {
     return Container(
