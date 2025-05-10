@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_code/style/color.dart';
 
 class UploadController extends GetxController {
   final box = GetStorage();
@@ -18,7 +19,6 @@ class UploadController extends GetxController {
     required String simType,
   }) async {
     isLoading(true);
-
     try {
       String? token = box.read('token');
       if (token == null || token.isEmpty) {
@@ -58,14 +58,14 @@ class UploadController extends GetxController {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(responseBody);
         String message = responseData['message'] ?? 'Data uploaded successfully';
-        Get.snackbar("Success", message, backgroundColor: Colors.green);
+        Get.snackbar("Success", message, backgroundColor: AppColors.success40);
         simController.clear();
         serialController.clear();
         imageFile = null;
       } else {
         final responseData = jsonDecode(responseBody);
         String message = responseData['message'] ?? 'Upload failed';
-        Get.snackbar("Failed", message, backgroundColor: Colors.red);
+        Get.snackbar("Failed", message, backgroundColor: AppColors.error20);
       }
     } catch (e) {
       Get.snackbar(

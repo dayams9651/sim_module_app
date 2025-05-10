@@ -11,7 +11,6 @@ import '../controller/text_controller.dart';
 import '../style/color.dart';
 import '../style/text_style.dart';
 
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
   @override
@@ -87,7 +86,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Text(
               "Scan SIM Number",
               style: AppTextStyles.kCaption13SemiBoldTextStyle
-                  .copyWith(color: AppColors.white),
+                  .copyWith(color: AppColors.white100),
             ),
           ),
           actions: [
