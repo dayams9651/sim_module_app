@@ -23,6 +23,7 @@ class TextController extends GetxController {
     } else {
       detectedText.value = '';
     }
+
     await textRecognizer.close();
   }
 

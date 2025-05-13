@@ -47,7 +47,8 @@ class UserLogInService extends GetxController {
         showCustomSnackbar('Alert ', responseData['message'], backgroundColor: AppColors.warning20);
       }
     } catch (error) {
-      showCustomSnackbar('Error', 'Please Check Your Internet Connection', backgroundColor: AppColors.error20);
+      showCustomSnackbar('Error', 'Please Check Your Internet Connection $error', backgroundColor: AppColors.error20);
+      debugPrint('Error $error');
     }
   }
   String getToken() {
